@@ -114,7 +114,7 @@ def create_app(config=None):
 
     @app.get('/static/<name>')
     def static_asset(name):
-        if name not in ('app.js', 'style.css', 'jspdf.umd.min.js'):
+        if name not in ('app.js', 'style.css', 'jspdf.umd.min.js', 'PQPredict.svg'):
             return jsonify(error='Not found.'), 404
         return send_file(ROOT / name)
 

@@ -1,4 +1,4 @@
-/* PQConnect dashboard: recorded-history ML and independent network estimates. */
+/* PQPredict dashboard: recorded-history ML and independent network estimates. */
 'use strict';
 (() => {
   const $ = (id) => document.getElementById(id);
@@ -31,8 +31,7 @@
   }
   function fillConfigurations(preferred) {
     const previous = preferred || $('configuration').value;
-    const configurations = (state.meta?.configurations || []).filter((row) => Number(row.category) >= Number($('minCategory').value));
-    $('configuration').replaceChildren(...configurations.map((row) => { const option = el('option', '', displayName(row)); option.value = row.configuration_id; return option; }));
+    const configurations = (state.meta?.configurations || []).filter((row) => Number(row.category) >= Number($('minCategory').value));$('configuration').replaceChildren(...configurations.map((row) => { const option = el('option', '', displayName(row)); option.value = row.configuration_id; return option; }));
     if (configurations.some((row) => row.configuration_id === previous)) $('configuration').value = previous;
     $('analyzeButton').disabled = configurations.length === 0;
   }
@@ -45,8 +44,7 @@
     setText('modelStatus', meta.model?.loaded ? 'Trained model ready' : 'Model unavailable');
     setText('runtimeLabel', meta.host?.arch ? `Runtime: ${meta.host.arch}` : 'Python inference service');
     if (meta.profiles?.length) {
-      $('profile').replaceChildren(...meta.profiles.map((row) => { const option = el('option', '', row.label); option.value = row.id; return option; }));
-      $('profile').value = meta.profiles.some((p) => p.id === 'middle') ? 'middle' : meta.profiles[0].id;
+      $('profile').replaceChildren(...meta.profiles.map((row) => { const option = el('option', '', row.label); option.value = row.id; return option; }));$('profile').value = meta.profiles.some((p) => p.id === 'middle') ? 'middle' : meta.profiles[0].id;
     }
     fillConfigurations(meta.default_configuration);
     if (typeof meta.scope === 'string') setText('modelScope', meta.scope);
@@ -76,7 +74,7 @@
   }
   async function boot() {
     $('retryBoot').hidden = true;
-    setText('bootMessage', 'Connecting to PQConnect…');
+    setText('bootMessage', 'Connecting to PQPredict…');
     try {
       const session = await api('/api/session');
       state.csrf = session.csrf;
@@ -97,7 +95,7 @@
     state.controller?.abort();
     const controller = new AbortController(); state.controller = controller;
     const timeout = setTimeout(() => controller.abort(), 60000);
-    const request = { min_category: Number($('minCategory').value), target_ms: Number($('targetMs').value), profile: $('profile').value, configuration_id: $('configuration').value, network: state.network ? { rtt_ms: state.network.rtt_ms, download_mbps: state.network.download_mbps } : null };
+    const request = { min_category: Number($('minCategory').value), target_ms: Number($('targetMs').value), profile: $('profile').value, configuration_id:$('configuration').value, network: state.network ? { rtt_ms: state.network.rtt_ms, download_mbps: state.network.download_mbps } : null };
     setError('');
     $('analyzeButton').disabled = true; $('analysisForm').setAttribute('aria-busy', 'true');
     for (const control of $('analysisForm').querySelectorAll('input, select')) control.disabled = true;
@@ -110,7 +108,7 @@
       state.result = result;
       state.selected = (typeof result.selected === 'string' ? result.selected : result.selected?.configuration_id) || request.configuration_id || result.results[0].configuration_id;
       if (!result.results.some((row) => row.configuration_id === state.selected)) state.selected = result.results[0].configuration_id;
-      state.dirty = String(request.min_category) !== $('minCategory').value || String(request.target_ms) !== $('targetMs').value || request.profile !== $('profile').value;
+      state.dirty = String(request.min_category) !== $('minCategory').value || String(request.target_ms) !== $('targetMs').value \vert{}\vert{} request.profile !==$('profile').value;
       renderResults();
       if (state.dirty) markDirty();
       else setText('analysisStatus', 'Analysis complete · recorded telemetry.');
@@ -130,7 +128,7 @@
   function chooseConfiguration(id) {
     if (!state.result?.results.some((row) => row.configuration_id === id)) return;
     state.selected = id;
-    if ([...$('configuration').options].some((option) => option.value === id)) $('configuration').value = id;
+    if ([...$('configuration').options].some((option) => option.value === id))$('configuration').value = id;
     renderResults();
   }
   function renderResults() {
@@ -280,30 +278,25 @@
       body = [columns.join(','), ...rows].join('\r\n'); type = 'text/csv;charset=utf-8';
     }
     const url = URL.createObjectURL(new Blob([body], { type }));
-    const link = el('a'); link.href = url; link.download = `pqconnect-analysis-${new Date().toISOString().slice(0, 10)}.${format}`;
+    const link = el('a'); link.href = url; link.download = `pqpredict-analysis-${new Date().toISOString().slice(0, 10)}.${format}`;
     document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   $('loginForm').addEventListener('submit', async (event) => {
     event.preventDefault(); $('loginButton').disabled = true; setText('loginError', '');
     try {
       const session = await api('/api/session'); state.csrf = session.csrf;
-      const result = await api('/api/login', { body: { username: $('username').value.trim(), password: $('password').value } });
+      const result = await api('/api/login', { body: { username: $('username').value.trim(), password:$('password').value } });
       state.csrf = result.csrf; $('password').value = '';
       await loadApp();
     } catch (error) { setText('loginError', error.message); }
     finally { $('loginButton').disabled = false; }
   });
   $('logoutButton').addEventListener('click', async () => { try { await api('/api/logout', { body: {} }); signedOut(); } catch (error) { setError(error.message); } });
-  $('retryBoot').addEventListener('click', boot);
-  $('analysisForm').addEventListener('submit', (event) => { event.preventDefault(); analyze(); });
-  $('minCategory').addEventListener('change', () => { fillConfigurations(); markDirty(); });
-  $('targetMs').addEventListener('input', markDirty);
-  $('profile').addEventListener('change', markDirty);
-  $('configuration').addEventListener('change', () => { if (!state.dirty && state.result?.results.some((row) => row.configuration_id === $('configuration').value)) chooseConfiguration($('configuration').value); else markDirty(); });
-  $('sortResults').addEventListener('change', renderTable);
-  $('probeButton').addEventListener('click', runProbe);
+  $('retryBoot').addEventListener('click', boot);$('analysisForm').addEventListener('submit', (event) => { event.preventDefault(); analyze(); });
+  $('minCategory').addEventListener('change', () => { fillConfigurations(); markDirty(); });$('targetMs').addEventListener('input', markDirty);
+  $('profile').addEventListener('change', markDirty);$('configuration').addEventListener('change', () => { if (!state.dirty && state.result?.results.some((row) => row.configuration_id === $('configuration').value)) chooseConfiguration($('configuration').value); else markDirty(); });
+  $('sortResults').addEventListener('change', renderTable);$('probeButton').addEventListener('click', runProbe);
   $('resetProbe').addEventListener('click', () => { state.probeSequence += 1; state.probeController?.abort(); state.network = null; $('resetProbe').hidden = true; setText('networkRtt', 'Not measured'); setText('networkRate', 'Not measured'); setText('probeStatus', 'Uses five requests and a 1 MiB download from this server.'); analyze(); });
-  $('exportCsv').addEventListener('click', () => download('csv'));
-  $('exportJson').addEventListener('click', () => download('json'));
+  $('exportCsv').addEventListener('click', () => download('csv'));$('exportJson').addEventListener('click', () => download('json'));
   boot();
 })();

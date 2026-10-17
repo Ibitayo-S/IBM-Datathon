@@ -1,97 +1,390 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#101e31">
-  <title>PQConnect — Post-quantum latency dashboard</title>
-  <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="/static/style.css">
-  <script src="/static/app.js" defer></script>
-</head>
-<body>
-  <noscript><p class="notice">Enable JavaScript to view the PQConnect dashboard.</p></noscript>
-  <div id="bootView" class="boot-screen"><span class="spinner" aria-hidden="true"></span><p id="bootMessage" role="status">Connecting to PQConnect…</p><button id="retryBoot" class="button primary" hidden>Try again</button></div>
-  <main id="loginView" class="login-screen" hidden>
-    <section class="login-card">
-      <div class="brand"><span class="brand-icon" aria-hidden="true">◇</span><span>PQ<span class="brand-light">Connect</span></span></div>
-      <p class="eyebrow">POST-QUANTUM PERFORMANCE</p>
-      <h1>A clearer view of authentication latency.</h1>
-      <p class="muted">Sign in to explore recorded PQ authentication measurements and network transfer estimates.</p>
-      <form id="loginForm">
-        <label for="username">Username</label><input id="username" name="username" autocomplete="username" required maxlength="64">
-        <label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required maxlength="256">
-        <button id="loginButton" class="button primary" type="submit">Sign in <span aria-hidden="true">→</span></button>
-        <p id="loginError" class="error" role="alert"></p>
-      </form>
-      <p class="footnote">Accounts are issued by your administrator.</p>
-    </section>
-  </main>
-  <div id="appView" hidden>
-    <header class="topbar">
-      <a href="#main" class="brand" aria-label="PQConnect dashboard"><span class="brand-icon" aria-hidden="true">◇</span><span>PQ<span class="brand-light">Connect</span></span></a>
-      <span class="topbar-divider" aria-hidden="true"></span><span class="topbar-title">Latency intelligence</span>
-      <div class="topbar-right"><span id="modeBadge" class="mode-badge">Research preview</span><span id="userName" class="user-name"></span><button id="logoutButton" class="button ghost small">Sign out</button></div>
-    </header>
-    <main id="main" class="page">
-      <section class="page-heading">
-        <div><p class="eyebrow">POST-QUANTUM READINESS / PERFORMANCE</p><h1>Make the latency cost visible.</h1><p class="heading-description">Explore predicted PQ authentication-exchange delay, then measure the extra certificate transfer cost on your connection.</p></div>
-        <div class="heading-status"><span class="status-dot" aria-hidden="true"></span><span id="modelStatus">Loading model</span><small id="runtimeLabel"></small></div>
-      </section>
-      <p id="appError" class="notice error" role="alert" hidden></p>
-      <div class="context-strip"><span class="context-label">HOW TO READ THIS</span><p><strong>ML predictions use simulated, recorded telemetry.</strong> Your network test adds a separate transfer estimate. These are experimental measurements, not full login times or a validated migration forecast.</p></div>
-      <section class="metric-grid" aria-label="Analysis summary" aria-live="polite">
-        <article class="metric metric-primary"><p>Predicted PQ exchange</p><div id="predictionMetric" class="metric-value">—</div><span id="predictionCaption">Select an authentication configuration</span><span class="metric-index" aria-hidden="true">01</span></article>
-        <article class="metric"><p>Latency budget</p><div id="budgetMetric" class="metric-value">—</div><span id="budgetCaption">Applied to the predicted exchange</span><span class="metric-index" aria-hidden="true">02</span></article>
-        <article class="metric"><p>Extra transfer estimate</p><div id="transferMetric" class="metric-value">—</div><span id="transferCaption">Run a network test to estimate</span><span class="metric-index" aria-hidden="true">03</span></article>
-        <article class="metric"><p>Eligible configurations</p><div id="eligibleMetric" class="metric-value">—</div><span id="eligibleCaption">Filtered by minimum security category</span><span class="metric-index" aria-hidden="true">04</span></article>
-      </section>
-      <div class="workspace">
-        <aside class="settings-column">
-          <section class="panel settings-panel">
-            <div class="panel-heading"><h2>Analysis settings</h2><span class="section-number">01</span></div>
-            <form id="analysisForm">
-              <label for="minCategory">Minimum NIST security category</label><select id="minCategory" name="min_category"><option value="1">Category 1 and above</option><option value="2">Category 2 and above</option><option value="3" selected>Category 3 and above</option><option value="5">Category 5</option></select>
-              <label for="configuration">Selected configuration</label><select id="configuration" name="configuration_id"></select>
-              <p class="field-help">Endpoint algorithm · certificate authority</p>
-              <label for="targetMs">Authentication latency budget</label><div class="input-unit"><input id="targetMs" name="target_ms" type="number" value="500" min="1" max="600000" step="1" required><span>ms</span></div>
-              <label for="profile">Recorded telemetry window</label><select id="profile" name="profile"><option value="early">Early sequence</option><option value="middle" selected>Middle sequence</option><option value="late">Late sequence</option></select>
-              <p class="field-help">Each configuration uses five previous exchanges from its own recorded experiment.</p>
-              <button id="analyzeButton" class="button primary" type="submit"><span>Analyze configurations</span><span aria-hidden="true">→</span></button>
-              <p id="analysisStatus" class="field-help form-status" role="status">Loading recorded measurements…</p>
-            </form>
-          </section>
-          <section class="panel network-panel">
-            <div class="panel-heading"><h2>Your network</h2><span class="section-number">02</span></div>
-            <p class="panel-description">Measure the browser-to-dashboard connection for a separate certificate transfer estimate.</p>
-            <dl class="network-values"><div><dt>Request duration</dt><dd id="networkRtt">Not measured</dd></div><div><dt>Download rate</dt><dd id="networkRate">Not measured</dd></div></dl>
-            <button id="probeButton" class="button secondary" type="button"><span aria-hidden="true">↗</span> Run network test</button><button id="resetProbe" class="text-button" type="button" hidden>Clear network measurement</button>
-            <p id="probeStatus" class="field-help" role="status">Uses five requests and a 1 MiB download from this server.</p>
-          </section>
-        </aside>
-        <div class="results-column">
-          <section class="panel comparison-panel" aria-labelledby="comparisonTitle">
-            <div class="panel-heading"><div><p class="eyebrow">RECORDED TELEMETRY / ML ESTIMATE</p><h2 id="comparisonTitle">Authentication-exchange delay</h2></div><span id="chartCount" class="subtle-badge">Awaiting analysis</span></div>
-            <div class="chart-legend"><span><i class="legend-dot"></i>Predicted delay</span><span><i class="legend-line"></i>Latency budget</span><span class="chart-unit">Milliseconds · lower is faster</span></div>
-            <div id="comparisonChart" class="bar-chart" aria-label="Predicted authentication delay by configuration"></div>
-            <p id="comparisonNote" class="chart-note">Each configuration uses its own recorded history; this is not a controlled migration comparison.</p>
-          </section>
-          <section class="panel detail-panel" aria-labelledby="selectedTitle">
-            <div class="panel-heading"><div><p class="eyebrow">SELECTED CONFIGURATION</p><h2 id="selectedTitle">Loading configuration…</h2></div><span id="selectedBadge" class="subtle-badge">—</span></div>
-            <div class="detail-grid"><div class="history-block"><div class="history-heading"><h3>Recent recorded exchanges</h3><span id="historyAverage"></span></div><div id="historyChart" class="history-chart"></div><p class="field-help">Five completed exchanges supplied to the model.</p></div><dl class="selected-facts"><div><dt>Next recorded exchange</dt><dd id="observedDelay">—</dd></div><div><dt>Certificate messages</dt><dd id="certificateBytes">—</dd></div><div><dt>Held-out exchanges</dt><dd id="testRows">—</dd></div></dl></div>
-            <p id="selectedProvenance" class="field-help"></p><p id="selectedWarning" class="notice compact" hidden></p>
-          </section>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#101e31" />
+    <title>PQPredict — Post-quantum latency dashboard</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <noscript
+      ><p class="notice">
+        Enable JavaScript to view the PQPredict dashboard.
+      </p></noscript
+    >
+    <div id="bootView" class="boot-screen">
+      <span class="spinner" aria-hidden="true"></span>
+      <p id="bootMessage" role="status">Connecting to PQPredict…</p>
+      <button id="retryBoot" class="button primary" hidden>Try again</button>
+    </div>
+    <main id="loginView" class="login-screen" hidden>
+      <section class="login-card">
+        <div class="brand">
+          <img src="/static/PQPredict.svg" alt="PQPredict" height="42" />
         </div>
-      </div>
-      <section class="panel table-panel" aria-labelledby="tableTitle">
-        <div class="panel-heading"><div><p class="eyebrow">CONFIGURATION EXPLORER</p><h2 id="tableTitle">Compare eligible configurations</h2></div><div class="export-actions"><button id="exportCsv" class="button secondary small" disabled>Export CSV</button><button id="exportJson" class="button secondary small" disabled>Export JSON</button></div></div>
-        <div class="table-toolbar"><p id="tableSummary">Waiting for model predictions.</p><label for="sortResults">Sort by <select id="sortResults"><option value="predicted">Predicted delay</option><option value="name">Configuration name</option><option value="category">Security category</option></select></label></div>
-        <div class="table-scroll"><table><caption class="sr-only">Select a configuration to view its recent exchanges and prediction.</caption><thead><tr><th scope="col">Endpoint / CA algorithm</th><th scope="col">Category</th><th scope="col">Predicted delay</th><th scope="col">Budget</th><th scope="col">Extra transfer <span title="Additional certificate-message bytes divided by measured download rate; separate from ML prediction.">ⓘ</span></th></tr></thead><tbody id="resultsBody"><tr><td colspan="5" class="table-empty">Loading predictions…</td></tr></tbody></table></div>
-        <p class="table-footnote">Extra transfer compares certificate-message size with the classical reference. It assumes the measured download rate in both directions and excludes cryptographic processing, packet loss, round trips and protocol overhead.</p>
+        <p class="eyebrow">POST-QUANTUM PERFORMANCE</p>
+        <h1>A clearer view of authentication latency.</h1>
+        <p class="muted">
+          Sign in to explore recorded PQ authentication measurements and network
+          transfer estimates.
+        </p>
+        <form id="loginForm">
+          <label for="username">Username</label
+          ><input
+            id="username"
+            name="username"
+            autocomplete="username"
+            required
+            maxlength="64"
+          />
+          <label for="password">Password</label
+          ><input
+            id="password"
+            name="password"
+            type="password"
+            autocomplete="current-password"
+            required
+            maxlength="256"
+          />
+          <button id="loginButton" class="button primary" type="submit">
+            Sign in <span aria-hidden="true">→</span>
+          </button>
+          <p id="loginError" class="error" role="alert"></p>
+        </form>
+        <p class="footnote">Accounts are issued by your administrator.</p>
       </section>
-      <details class="panel method-panel"><summary><span>Method &amp; model quality</span><span class="details-hint">Scope, accuracy and limitations <span aria-hidden="true">＋</span></span></summary><div class="method-content"><div><h3>What the model predicts</h3><p id="modelScope">The next authentication-exchange delay under an unchanged cryptographic configuration, using recorded simulation data.</p><p>Network request duration and download rate are measured separately. They are not inputs to this trained model. The transfer estimate is extra certificate-message bytes × 8 ÷ measured bits per second.</p><p id="baselineNote"></p></div><div><h3>Held-out model performance</h3><dl id="modelMetrics" class="quality-metrics"></dl><p id="modelLimitations"></p><p>Each configuration uses its own historical telemetry. Comparing rows does not establish the causal cost of switching from classical to post-quantum authentication.</p></div></div></details>
-      <footer class="footer"><span class="footer-brand">PQConnect</span><span>Experimental performance dashboard · Research dataset replay</span><span id="updatedAt"></span></footer>
     </main>
-  </div>
-</body>
+    <div id="appView" hidden>
+      <header class="topbar">
+        <a href="#main" class="brand" aria-label="PQPredict dashboard"
+          ><img src="/static/PQPredict.svg" alt="PQPredict" height="34"
+        /></a>
+        <span class="topbar-divider" aria-hidden="true"></span
+        ><span class="topbar-title">Latency intelligence</span>
+        <div class="topbar-right">
+          <span id="modeBadge" class="mode-badge">Research preview</span
+          ><span id="userName" class="user-name"></span
+          ><button id="logoutButton" class="button ghost small">
+            Sign out
+          </button>
+        </div>
+      </header>
+      <main id="main" class="page">
+        <section class="page-heading">
+          <div>
+            <p class="eyebrow">POST-QUANTUM READINESS / PERFORMANCE</p>
+            <h1>Make the latency cost visible.</h1>
+            <p class="heading-description">
+              Explore predicted PQ authentication-exchange delay, then measure
+              the extra certificate transfer cost on your connection.
+            </p>
+          </div>
+          <div class="heading-status">
+            <span class="status-dot" aria-hidden="true"></span
+            ><span id="modelStatus">Loading model</span
+            ><small id="runtimeLabel"></small>
+          </div>
+        </section>
+        <p id="appError" class="notice error" role="alert" hidden></p>
+        <div class="context-strip">
+          <span class="context-label">HOW TO READ THIS</span>
+          <p>
+            <strong>ML predictions use simulated, recorded telemetry.</strong>
+            Your network test adds a separate transfer estimate. These are
+            experimental measurements, not full login times or a validated
+            migration forecast.
+          </p>
+        </div>
+        <section
+          class="metric-grid"
+          aria-label="Analysis summary"
+          aria-live="polite"
+        >
+          <article class="metric metric-primary">
+            <p>Predicted PQ exchange</p>
+            <div id="predictionMetric" class="metric-value">—</div>
+            <span id="predictionCaption"
+              >Select an authentication configuration</span
+            ><span class="metric-index" aria-hidden="true">01</span>
+          </article>
+          <article class="metric">
+            <p>Latency budget</p>
+            <div id="budgetMetric" class="metric-value">—</div>
+            <span id="budgetCaption">Applied to the predicted exchange</span
+            ><span class="metric-index" aria-hidden="true">02</span>
+          </article>
+          <article class="metric">
+            <p>Extra transfer estimate</p>
+            <div id="transferMetric" class="metric-value">—</div>
+            <span id="transferCaption">Run a network test to estimate</span
+            ><span class="metric-index" aria-hidden="true">03</span>
+          </article>
+          <article class="metric">
+            <p>Eligible configurations</p>
+            <div id="eligibleMetric" class="metric-value">—</div>
+            <span id="eligibleCaption"
+              >Filtered by minimum security category</span
+            ><span class="metric-index" aria-hidden="true">04</span>
+          </article>
+        </section>
+        <div class="workspace">
+          <aside class="settings-column">
+            <section class="panel settings-panel">
+              <div class="panel-heading">
+                <h2>Analysis settings</h2>
+                <span class="section-number">01</span>
+              </div>
+              <form id="analysisForm">
+                <label for="minCategory">Minimum NIST security category</label
+                ><select id="minCategory" name="min_category">
+                  <option value="1">Category 1 and above</option>
+                  <option value="2">Category 2 and above</option>
+                  <option value="3" selected>Category 3 and above</option>
+                  <option value="5">Category 5</option>
+                </select>
+                <label for="configuration">Selected configuration</label
+                ><select id="configuration" name="configuration_id"></select>
+                <p class="field-help">
+                  Endpoint algorithm · certificate authority
+                </p>
+                <label for="targetMs">Authentication latency budget</label>
+                <div class="input-unit">
+                  <input
+                    id="targetMs"
+                    name="target_ms"
+                    type="number"
+                    value="500"
+                    min="1"
+                    max="600000"
+                    step="1"
+                    required
+                  /><span>ms</span>
+                </div>
+                <label for="profile">Recorded telemetry window</label
+                ><select id="profile" name="profile">
+                  <option value="early">Early sequence</option>
+                  <option value="middle" selected>Middle sequence</option>
+                  <option value="late">Late sequence</option>
+                </select>
+                <p class="field-help">
+                  Each configuration uses five previous exchanges from its own
+                  recorded experiment.
+                </p>
+                <button id="analyzeButton" class="button primary" type="submit">
+                  <span>Analyze configurations</span
+                  ><span aria-hidden="true">→</span>
+                </button>
+                <p
+                  id="analysisStatus"
+                  class="field-help form-status"
+                  role="status"
+                >
+                  Loading recorded measurements…
+                </p>
+              </form>
+            </section>
+            <section class="panel network-panel">
+              <div class="panel-heading">
+                <h2>Your network</h2>
+                <span class="section-number">02</span>
+              </div>
+              <p class="panel-description">
+                Measure the browser-to-dashboard connection for a separate
+                certificate transfer estimate.
+              </p>
+              <dl class="network-values">
+                <div>
+                  <dt>Request duration</dt>
+                  <dd id="networkRtt">Not measured</dd>
+                </div>
+                <div>
+                  <dt>Download rate</dt>
+                  <dd id="networkRate">Not measured</dd>
+                </div>
+              </dl>
+              <button id="probeButton" class="button secondary" type="button">
+                <span aria-hidden="true">↗</span> Run network test</button
+              ><button id="resetProbe" class="text-button" type="button" hidden>
+                Clear network measurement
+              </button>
+              <p id="probeStatus" class="field-help" role="status">
+                Uses five requests and a 1 MiB download from this server.
+              </p>
+            </section>
+          </aside>
+          <div class="results-column">
+            <section
+              class="panel comparison-panel"
+              aria-labelledby="comparisonTitle"
+            >
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">RECORDED TELEMETRY / ML ESTIMATE</p>
+                  <h2 id="comparisonTitle">Authentication-exchange delay</h2>
+                </div>
+                <span id="chartCount" class="subtle-badge"
+                  >Awaiting analysis</span
+                >
+              </div>
+              <div class="chart-legend">
+                <span><i class="legend-dot"></i>Predicted delay</span
+                ><span><i class="legend-line"></i>Latency budget</span
+                ><span class="chart-unit">Milliseconds · lower is faster</span>
+              </div>
+              <div
+                id="comparisonChart"
+                class="bar-chart"
+                aria-label="Predicted authentication delay by configuration"
+              ></div>
+              <p id="comparisonNote" class="chart-note">
+                Each configuration uses its own recorded history; this is not a
+                controlled migration comparison.
+              </p>
+            </section>
+            <section class="panel detail-panel" aria-labelledby="selectedTitle">
+              <div class="panel-heading">
+                <div>
+                  <p class="eyebrow">SELECTED CONFIGURATION</p>
+                  <h2 id="selectedTitle">Loading configuration…</h2>
+                </div>
+                <span id="selectedBadge" class="subtle-badge">—</span>
+              </div>
+              <div class="detail-grid">
+                <div class="history-block">
+                  <div class="history-heading">
+                    <h3>Recent recorded exchanges</h3>
+                    <span id="historyAverage"></span>
+                  </div>
+                  <div id="historyChart" class="history-chart"></div>
+                  <p class="field-help">
+                    Five completed exchanges supplied to the model.
+                  </p>
+                </div>
+                <dl class="selected-facts">
+                  <div>
+                    <dt>Next recorded exchange</dt>
+                    <dd id="observedDelay">—</dd>
+                  </div>
+                  <div>
+                    <dt>Certificate messages</dt>
+                    <dd id="certificateBytes">—</dd>
+                  </div>
+                  <div>
+                    <dt>Held-out exchanges</dt>
+                    <dd id="testRows">—</dd>
+                  </div>
+                </dl>
+              </div>
+              <p id="selectedProvenance" class="field-help"></p>
+              <p id="selectedWarning" class="notice compact" hidden></p>
+            </section>
+          </div>
+        </div>
+        <section class="panel table-panel" aria-labelledby="tableTitle">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">CONFIGURATION EXPLORER</p>
+              <h2 id="tableTitle">Compare eligible configurations</h2>
+            </div>
+            <div class="export-actions">
+              <button id="exportCsv" class="button secondary small" disabled>
+                Export CSV</button
+              ><button id="exportJson" class="button secondary small" disabled>
+                Export JSON
+              </button>
+            </div>
+          </div>
+          <div class="table-toolbar">
+            <p id="tableSummary">Waiting for model predictions.</p>
+            <label for="sortResults"
+              >Sort by
+              <select id="sortResults">
+                <option value="predicted">Predicted delay</option>
+                <option value="name">Configuration name</option>
+                <option value="category">Security category</option>
+              </select></label
+            >
+          </div>
+          <div class="table-scroll">
+            <table>
+              <caption class="sr-only">
+                Select a configuration to view its recent exchanges and
+                prediction.
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Endpoint / CA algorithm</th>
+                  <th scope="col">Category</th>
+                  <th scope="col">Predicted delay</th>
+                  <th scope="col">Budget</th>
+                  <th scope="col">
+                    Extra transfer
+                    <span
+                      title="Additional certificate-message bytes divided by measured download rate; separate from ML prediction."
+                      >ⓘ</span
+                    >
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="resultsBody">
+                <tr>
+                  <td colspan="5" class="table-empty">Loading predictions…</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p class="table-footnote">
+            Extra transfer compares certificate-message size with the classical
+            reference. It assumes the measured download rate in both directions
+            and excludes cryptographic processing, packet loss, round trips and
+            protocol overhead.
+          </p>
+        </section>
+        <details class="panel method-panel">
+          <summary>
+            <span>Method &amp; model quality</span
+            ><span class="details-hint"
+              >Scope, accuracy and limitations
+              <span aria-hidden="true">＋</span></span
+            >
+          </summary>
+          <div class="method-content">
+            <div>
+              <h3>What the model predicts</h3>
+              <p id="modelScope">
+                The next authentication-exchange delay under an unchanged
+                cryptographic configuration, using recorded simulation data.
+              </p>
+              <p>
+                Network request duration and download rate are measured
+                separately. They are not inputs to this trained model. The
+                transfer estimate is extra certificate-message bytes × 8 ÷
+                measured bits per second.
+              </p>
+              <p id="baselineNote"></p>
+            </div>
+            <div>
+              <h3>Held-out model performance</h3>
+              <dl id="modelMetrics" class="quality-metrics"></dl>
+              <p id="modelLimitations"></p>
+              <p>
+                Each configuration uses its own historical telemetry. Comparing
+                rows does not establish the causal cost of switching from
+                classical to post-quantum authentication.
+              </p>
+            </div>
+          </div>
+        </details>
+        <footer class="footer">
+          <span class="footer-brand">PQPredict</span
+          ><span
+            >Experimental performance dashboard · Research dataset replay</span
+          ><span id="updatedAt"></span>
+        </footer>
+      </main>
+    </div>
+  </body>
 </html>

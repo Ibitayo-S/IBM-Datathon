@@ -7,6 +7,7 @@ from threading import RLock
 import joblib
 import numpy as np
 import pandas as pd
+from pqconnect.environment_check import compatibility_error
 from pqconnect.features import FEATURES, MEASUREMENTS, NUMERIC, inference_features
 
 ROOT = Path(__file__).resolve().parent
@@ -54,7 +55,11 @@ class ModelService:
         self.baseline = {}
         self._cache = {}
         self._lock = RLock()
+        version_error = None
         try:
+            version_error = compatibility_error(self.directory / 'metadata.json')
+            if version_error:
+                raise RuntimeError(version_error)
             self.metadata = self.read('metadata.json')
             self.metrics = self.read('metrics.json')
             for row in self.read('configurations.json'):
@@ -68,7 +73,7 @@ class ModelService:
                 raise ValueError('Model feature schema differs from the shared feature pipeline.')
         except Exception as error:
             self.model = None
-            self.error = f'Model assets could not be loaded ({type(error).__name__}). Check the server log.'
+            self.error = version_error or f'Model assets could not be loaded ({type(error).__name__}). Check the server log.'
             import logging
             logging.getLogger(__name__).exception('Unable to load model assets')
 

@@ -18,14 +18,18 @@ Alternatively, `powershell -ExecutionPolicy Bypass -File .\run.ps1` creates a lo
 
 Use Python 3.11 or newer (training used Python 3.13). In a fresh checkout:
 
+On Linux, use the provided setup script. It installs the exact versions used to
+serialize the bundled model and checks them before startup:
+
 ```sh
-python -m venv .venv
-# Linux:
-source .venv/bin/activate
-# Windows PowerShell instead: .\.venv\Scripts\Activate.ps1
-python -m pip install -r requirements.txt
-python app.py --demo
+chmod +x setup-linux.sh
+./setup-linux.sh
+.venv/bin/python app.py --demo
 ```
+
+The explicit `.venv/bin/python` matters: it prevents a system Python or a stale
+environment from loading the model. You can also run `python environment_check.py`
+inside an activated environment to see installed and required versions.
 
 On LinuxONE, keep the service on loopback and use an SSH tunnel from your laptop:
 
@@ -33,7 +37,23 @@ On LinuxONE, keep the service on loopback and use an SSH tunnel from your laptop
 ssh -L 5000:127.0.0.1:5000 your-user@your-linuxone-host
 ```
 
-Then open http://127.0.0.1:5000 locally. A network probe over this tunnel measures the tunnel path, not the source simulation's Wi-Fi network. Exact dependency availability on s390x must be checked on the provided machine. If compatible pinned libraries cannot be installed, use supported versions and retrain the model there. This integration has been tested locally on Windows, not on LinuxONE.
+Then open http://127.0.0.1:5000 locally. A network probe over this tunnel measures the tunnel path, not the source simulation's Wi-Fi network. Exact dependency availability on s390x must be checked on the provided machine. If compatible pinned libraries cannot be installed, the setup script stops and prints the retraining commands. Do not suppress or ignore an `InconsistentVersionWarning`: use the exact environment or retrain and regenerate the artifacts on LinuxONE. This integration has been tested locally on Windows, not on LinuxONE.
+
+### Fixing version warnings
+
+If you already created an environment manually, first confirm which interpreter
+you are actually using:
+
+```sh
+which python
+python environment_check.py
+python -m pip check
+```
+
+The bundled model requires scikit-learn 1.8.0, NumPy 2.4.4, pandas 3.0.2 and
+joblib 1.5.3. Recreate the environment with `./setup-linux.sh` when any version
+differs. PQConnect now refuses to load a mismatched serialized model instead of
+continuing after a warning and producing potentially unreliable results.
 
 ## Dashboard workflow
 

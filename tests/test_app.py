@@ -9,6 +9,7 @@ import math
 from pathlib import Path
 import tempfile
 import unittest
+from unittest.mock import patch
 
 from app import create_app
 
@@ -310,6 +311,15 @@ class MissingModelTests(unittest.TestCase):
                 self.assertNotIn("predicted_authentication_exchange_delay_ms", response.get_json())
             response = client.post('/api/analyze', json={'configuration_id':'ML-DSA-65_signed-by_ML-DSA-65'}, headers={'X-CSRF-Token':token})
             self.assertEqual(response.status_code, 503)
+
+
+class EnvironmentCompatibilityTests(unittest.TestCase):
+    def test_model_refuses_inconsistent_runtime_versions(self):
+        from model_service import ModelService
+        with patch('model_service.compatibility_error', return_value='version mismatch'):
+            service = ModelService(MODEL_DIR)
+        self.assertIsNone(service.model)
+        self.assertIn('version mismatch', service.error)
 
 
 class AuthenticatedTests(unittest.TestCase):

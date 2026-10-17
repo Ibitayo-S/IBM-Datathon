@@ -4,11 +4,15 @@ import json
 from pathlib import Path
 import joblib
 import numpy as np
+from environment_check import compatibility_error
 from features import NUMERIC, inference_features
 
 
 def predict(payload, artifacts=None):
     artifacts = Path(artifacts or Path(__file__).parent / 'artifacts')
+    version_error = compatibility_error(artifacts / 'metadata.json')
+    if version_error:
+        raise RuntimeError(version_error)
     metadata = json.loads((artifacts / 'metadata.json').read_text(encoding='utf-8'))
     catalog = json.loads((artifacts / 'configurations.json').read_text(encoding='utf-8'))
     config_id = payload['configuration_id']

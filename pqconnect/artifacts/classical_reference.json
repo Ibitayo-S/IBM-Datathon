@@ -1,0 +1,9 @@
+{
+  "label": "ECDSA P-256 / SHA-256 reference",
+  "certificate_message_bytes": 2582.0,
+  "source_file": "s1_ECDSA-SHA256_signed-by_ECDSA-SHA256.csv",
+  "rows": 800,
+  "sha256": "cad3c437ff63cf1b5e321fe6ff37bbccbf3bf370431f29eb1f69011c1a1c2c4f",
+  "source_url": "https://github.com/samettonyali29/x-layer_performance_evaluation_of_PQ_X.509",
+  "definition": "Median combined server and client certificate-message bytes from the classical reference run; not a classical login latency."
+}

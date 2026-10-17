@@ -1,210 +1,97 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>PQConnect</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="/static/style.css">
-<script src="/static/app.js" defer></script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101e31">
+  <title>PQConnect — Post-quantum latency dashboard</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/static/style.css">
+  <script src="/static/app.js" defer></script>
 </head>
 <body>
-<noscript><p class="noscript">PQConnect needs JavaScript turned on.</p></noscript>
-
-<!-- Sign in -->
-<div id="loginView" class="login-screen" hidden>
-  <div class="login-card">
-    <div class="brand brand-lg">
-      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><path class="logo-line" d="M6 16 16 6 26 16 16 26Z"/><circle cx="6" cy="16" r="3"/><circle cx="16" cy="6" r="3"/><circle cx="26" cy="16" r="3"/><circle cx="16" cy="26" r="3"/><circle class="logo-core" cx="16" cy="16" r="3.4"/></svg>
-      <span>PQConnect</span>
-    </div>
-    <p class="login-lede">Know how fast post-quantum logins will be before you switch.</p>
-    <form id="loginForm" autocomplete="on">
-      <label class="field-label" for="username">Username</label>
-      <input class="input" id="username" name="username" autocomplete="username" required maxlength="64">
-      <label class="field-label" for="password">Password</label>
-      <input class="input" id="password" name="password" type="password" autocomplete="current-password" required maxlength="256">
-      <button class="btn btn-primary btn-block" id="loginBtn" type="submit">Sign in</button>
-      <p id="loginError" class="form-error" role="alert"></p>
-    </form>
-    <p class="login-foot">Accounts are issued by your administrator.</p>
-  </div>
-</div>
-
-<!-- App -->
-<div id="appView" class="app" hidden>
-  <header class="nav">
-    <div class="brand">
-      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><path class="logo-line" d="M6 16 16 6 26 16 16 26Z"/><circle cx="6" cy="16" r="3"/><circle cx="16" cy="6" r="3"/><circle cx="26" cy="16" r="3"/><circle cx="16" cy="26" r="3"/><circle class="logo-core" cx="16" cy="16" r="3.4"/></svg>
-      <span>PQConnect</span>
-    </div>
-    <span id="modeBadge" class="pill"></span>
-    <nav class="nav-links" id="navLinks" hidden>
-      <a href="#test">Test</a><a href="#report">Report</a><a href="#slides">Slides</a>
-    </nav>
-    <div class="nav-right">
-      <span class="avatar" id="userInitial" aria-hidden="true"></span>
-      <span id="userName" class="nav-user"></span>
-      <button id="logoutBtn" type="button" class="btn btn-ghost">Sign out</button>
-    </div>
-  </header>
-
-  <!-- Stage 1 and 2: GO, then the live test -->
-  <section class="hero" id="test">
-    <div class="hero-inner">
-      <p class="hero-lede" id="heroLede">See how much slower logins get on this network if you switch to post-quantum certificates.</p>
-
-      <div class="stats" id="stats" hidden>
-        <div class="stat"><span class="stat-label">Round trip to server</span><span class="stat-val" id="statLatency">-</span><span class="stat-sub" id="subLatency">cost of each extra handshake trip</span></div>
-        <div class="stat"><span class="stat-label">Bandwidth to you</span><span class="stat-val" id="statDownload">-</span><span class="stat-sub" id="subDownload">how fast big certificates arrive</span></div>
-        <div class="stat"><span class="stat-label">Classical login today</span><span class="stat-val" id="statCount">-</span><span class="stat-sub" id="subCount">TLS handshake, ECDSA or RSA</span></div>
-        <div class="stat"><span class="stat-label">Best post-quantum login</span><span class="stat-val" id="statResult">-</span><span class="stat-sub" id="subResult">predicted by the model</span></div>
-      </div>
-
-      <div class="dial-wrap">
-        <button type="button" class="go" id="runBtn" aria-label="Start the test"><span class="go-text">GO</span></button>
-        <div class="gauge" id="gauge" hidden>
-          <svg id="gaugeSvg" viewBox="0 0 300 300" aria-hidden="true"></svg>
-          <div class="readout"><div class="gauge-value" id="gaugeValue">0</div><div class="gauge-unit" id="gaugeUnit">ms</div></div>
-        </div>
-      </div>
-
-      <div class="phase" id="phase" aria-live="polite"></div>
-      <div class="ticker" id="ticker"></div>
-
-      <div class="hero-error" id="heroError" hidden>
-        <p id="heroErrorText"></p>
-        <div class="hero-actions">
-          <button type="button" class="btn btn-hero" id="retryBtn">Try again</button>
-          <button type="button" class="btn btn-hero" id="typicalBtn" hidden>Use typical values</button>
-        </div>
-      </div>
-
-      <div class="hero-done" id="heroDone" hidden>
-        <p class="done-line" id="doneLine"></p>
-        <div class="hero-actions">
-          <a class="btn btn-primary" href="#report" id="toReport">See the full report</a>
-          <button type="button" class="btn btn-hero pdf-btn" data-pdf>Download PDF report</button>
-          <button type="button" class="btn btn-hero" id="againBtn">Test again</button>
-        </div>
-      </div>
-
-      <!-- Policy: not network input, so it stays, but tucked away -->
-      <div class="policy" id="policyBar">
-        <button type="button" class="policy-summary" id="policyToggle" aria-expanded="false" aria-controls="policyPanel">
-          <span class="ptag" id="pCat"></span><span class="ptag" id="pTarget"></span><span class="ptag" id="pAlgs"></span>
-          <span class="policy-edit">Edit policy</span>
-        </button>
-        <div class="policy-panel" id="policyPanel" hidden>
-          <div class="field">
-            <span class="field-label" id="catLabel">Minimum NIST security category</span>
-            <div class="seg seg-4" id="catSeg" role="radiogroup" aria-labelledby="catLabel">
-              <button type="button" role="radio" data-cat="1">1</button>
-              <button type="button" role="radio" data-cat="2">2</button>
-              <button type="button" role="radio" data-cat="3">3</button>
-              <button type="button" role="radio" data-cat="5">5</button>
-            </div>
-            <input type="hidden" id="minCat" value="3">
-          </div>
-          <div class="field">
-            <label class="field-label" for="targetMs">Login delay target</label>
-            <div class="range-row">
-              <input type="range" id="targetRange" min="50" max="2000" step="50" value="500" aria-label="Login delay target slider">
-              <div class="num-unit"><input class="input" type="number" id="targetMs" value="500" min="1" max="600000" step="50"><span>ms</span></div>
-            </div>
-          </div>
-          <div class="field">
-            <div class="field-head">
-              <span class="field-label">Allowed algorithms</span>
-              <span class="quick">
-                <button type="button" class="link" id="algAll">All</button>
-                <button type="button" class="link" id="algMl">ML-DSA only</button>
-                <button type="button" class="link" id="algNone">None</button>
-              </span>
-            </div>
-            <div id="algGroups"></div>
-          </div>
-          <div class="policy-foot"><button type="button" class="btn btn-primary" id="policyDone">Done</button></div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Stage 3: the report -->
-  <main class="report" id="report" hidden>
-    <header class="report-head reveal">
-      <div>
-        <h1 class="report-title">Network report</h1>
-        <p class="report-meta" id="reportMeta"></p>
-      </div>
-      <div class="report-side">
-        <div class="report-tags" id="reportTags"></div>
-        <button type="button" class="btn btn-primary pdf-btn" data-pdf>Download PDF report</button>
-        <p class="pdf-status" id="pdfStatus" role="status"></p>
-      </div>
-    </header>
-    <div class="notice" id="reportNotice" hidden></div>
-
-    <section class="rsec reveal" id="secVerdict"></section>
-    <section class="rsec reveal" id="secNetwork"></section>
-    <section class="rsec reveal" id="secWhy"></section>
-    <section class="rsec reveal" id="secChains"></section>
-    <section class="rsec reveal" id="secLadder"></section>
-    <section class="rsec reveal" id="secLoad"></section>
-
-    <section class="rsec reveal">
-      <details class="all-chains" id="allChains">
-        <summary><span class="rsec-title">All certificate chains</span><span class="summary-hint" id="allChainsCount"></span></summary>
-        <div class="toolbar">
-          <select class="select" id="famFilter" aria-label="Chain family">
-            <option value="all">All families</option>
-            <option value="same">Same family</option>
-            <option value="ml">ML-DSA only</option>
-            <option value="slh">SLH-DSA only</option>
-          </select>
-          <select class="select" id="topN" aria-label="Rows shown">
-            <option value="10">Top 10</option>
-            <option value="25" selected>Top 25</option>
-            <option value="all">All</option>
-          </select>
-          <label class="toggle"><input type="checkbox" id="showExcluded"><span>Below minimum</span></label>
-          <!--export--><button type="button" class="btn btn-ghost" id="exportCsv">CSV</button><button type="button" class="btn btn-ghost" id="exportJson">Report JSON</button><!--/export-->
-        </div>
-        <div class="table-wrap"><table id="resultsTable" class="table"></table></div>
-      </details>
+  <noscript><p class="notice">Enable JavaScript to view the PQConnect dashboard.</p></noscript>
+  <div id="bootView" class="boot-screen"><span class="spinner" aria-hidden="true"></span><p id="bootMessage" role="status">Connecting to PQConnect…</p><button id="retryBoot" class="button primary" hidden>Try again</button></div>
+  <main id="loginView" class="login-screen" hidden>
+    <section class="login-card">
+      <div class="brand"><span class="brand-icon" aria-hidden="true">◇</span><span>PQ<span class="brand-light">Connect</span></span></div>
+      <p class="eyebrow">POST-QUANTUM PERFORMANCE</p>
+      <h1>A clearer view of authentication latency.</h1>
+      <p class="muted">Sign in to explore recorded PQ authentication measurements and network transfer estimates.</p>
+      <form id="loginForm">
+        <label for="username">Username</label><input id="username" name="username" autocomplete="username" required maxlength="64">
+        <label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required maxlength="256">
+        <button id="loginButton" class="button primary" type="submit">Sign in <span aria-hidden="true">→</span></button>
+        <p id="loginError" class="error" role="alert"></p>
+      </form>
+      <p class="footnote">Accounts are issued by your administrator.</p>
     </section>
-
-    <section class="rsec reveal" id="secTerms"></section>
-    <section class="rsec reveal" id="secMethod"></section>
   </main>
-
-  <!-- Stage 4: four slides -->
-  <section class="slides-band" id="slides" hidden>
-    <div class="slides-inner">
-      <div class="slides-head">
-        <h2 class="slides-title">The findings in four slides</h2>
-        <div class="slides-nav">
-          <button type="button" class="arrow" id="slidePrev" aria-label="Previous slide">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg>
-          </button>
-          <span class="slide-count" id="slideCount">1 / 4</span>
-          <button type="button" class="arrow" id="slideNext" aria-label="Next slide">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg>
-          </button>
+  <div id="appView" hidden>
+    <header class="topbar">
+      <a href="#main" class="brand" aria-label="PQConnect dashboard"><span class="brand-icon" aria-hidden="true">◇</span><span>PQ<span class="brand-light">Connect</span></span></a>
+      <span class="topbar-divider" aria-hidden="true"></span><span class="topbar-title">Latency intelligence</span>
+      <div class="topbar-right"><span id="modeBadge" class="mode-badge">Research preview</span><span id="userName" class="user-name"></span><button id="logoutButton" class="button ghost small">Sign out</button></div>
+    </header>
+    <main id="main" class="page">
+      <section class="page-heading">
+        <div><p class="eyebrow">POST-QUANTUM READINESS / PERFORMANCE</p><h1>Make the latency cost visible.</h1><p class="heading-description">Explore predicted PQ authentication-exchange delay, then measure the extra certificate transfer cost on your connection.</p></div>
+        <div class="heading-status"><span class="status-dot" aria-hidden="true"></span><span id="modelStatus">Loading model</span><small id="runtimeLabel"></small></div>
+      </section>
+      <p id="appError" class="notice error" role="alert" hidden></p>
+      <div class="context-strip"><span class="context-label">HOW TO READ THIS</span><p><strong>ML predictions use simulated, recorded telemetry.</strong> Your network test adds a separate transfer estimate. These are experimental measurements, not full login times or a validated migration forecast.</p></div>
+      <section class="metric-grid" aria-label="Analysis summary" aria-live="polite">
+        <article class="metric metric-primary"><p>Predicted PQ exchange</p><div id="predictionMetric" class="metric-value">—</div><span id="predictionCaption">Select an authentication configuration</span><span class="metric-index" aria-hidden="true">01</span></article>
+        <article class="metric"><p>Latency budget</p><div id="budgetMetric" class="metric-value">—</div><span id="budgetCaption">Applied to the predicted exchange</span><span class="metric-index" aria-hidden="true">02</span></article>
+        <article class="metric"><p>Extra transfer estimate</p><div id="transferMetric" class="metric-value">—</div><span id="transferCaption">Run a network test to estimate</span><span class="metric-index" aria-hidden="true">03</span></article>
+        <article class="metric"><p>Eligible configurations</p><div id="eligibleMetric" class="metric-value">—</div><span id="eligibleCaption">Filtered by minimum security category</span><span class="metric-index" aria-hidden="true">04</span></article>
+      </section>
+      <div class="workspace">
+        <aside class="settings-column">
+          <section class="panel settings-panel">
+            <div class="panel-heading"><h2>Analysis settings</h2><span class="section-number">01</span></div>
+            <form id="analysisForm">
+              <label for="minCategory">Minimum NIST security category</label><select id="minCategory" name="min_category"><option value="1">Category 1 and above</option><option value="2">Category 2 and above</option><option value="3" selected>Category 3 and above</option><option value="5">Category 5</option></select>
+              <label for="configuration">Selected configuration</label><select id="configuration" name="configuration_id"></select>
+              <p class="field-help">Endpoint algorithm · certificate authority</p>
+              <label for="targetMs">Authentication latency budget</label><div class="input-unit"><input id="targetMs" name="target_ms" type="number" value="500" min="1" max="600000" step="1" required><span>ms</span></div>
+              <label for="profile">Recorded telemetry window</label><select id="profile" name="profile"><option value="early">Early sequence</option><option value="middle" selected>Middle sequence</option><option value="late">Late sequence</option></select>
+              <p class="field-help">Each configuration uses five previous exchanges from its own recorded experiment.</p>
+              <button id="analyzeButton" class="button primary" type="submit"><span>Analyze configurations</span><span aria-hidden="true">→</span></button>
+              <p id="analysisStatus" class="field-help form-status" role="status">Loading recorded measurements…</p>
+            </form>
+          </section>
+          <section class="panel network-panel">
+            <div class="panel-heading"><h2>Your network</h2><span class="section-number">02</span></div>
+            <p class="panel-description">Measure the browser-to-dashboard connection for a separate certificate transfer estimate.</p>
+            <dl class="network-values"><div><dt>Request duration</dt><dd id="networkRtt">Not measured</dd></div><div><dt>Download rate</dt><dd id="networkRate">Not measured</dd></div></dl>
+            <button id="probeButton" class="button secondary" type="button"><span aria-hidden="true">↗</span> Run network test</button><button id="resetProbe" class="text-button" type="button" hidden>Clear network measurement</button>
+            <p id="probeStatus" class="field-help" role="status">Uses five requests and a 1 MiB download from this server.</p>
+          </section>
+        </aside>
+        <div class="results-column">
+          <section class="panel comparison-panel" aria-labelledby="comparisonTitle">
+            <div class="panel-heading"><div><p class="eyebrow">RECORDED TELEMETRY / ML ESTIMATE</p><h2 id="comparisonTitle">Authentication-exchange delay</h2></div><span id="chartCount" class="subtle-badge">Awaiting analysis</span></div>
+            <div class="chart-legend"><span><i class="legend-dot"></i>Predicted delay</span><span><i class="legend-line"></i>Latency budget</span><span class="chart-unit">Milliseconds · lower is faster</span></div>
+            <div id="comparisonChart" class="bar-chart" aria-label="Predicted authentication delay by configuration"></div>
+            <p id="comparisonNote" class="chart-note">Each configuration uses its own recorded history; this is not a controlled migration comparison.</p>
+          </section>
+          <section class="panel detail-panel" aria-labelledby="selectedTitle">
+            <div class="panel-heading"><div><p class="eyebrow">SELECTED CONFIGURATION</p><h2 id="selectedTitle">Loading configuration…</h2></div><span id="selectedBadge" class="subtle-badge">—</span></div>
+            <div class="detail-grid"><div class="history-block"><div class="history-heading"><h3>Recent recorded exchanges</h3><span id="historyAverage"></span></div><div id="historyChart" class="history-chart"></div><p class="field-help">Five completed exchanges supplied to the model.</p></div><dl class="selected-facts"><div><dt>Next recorded exchange</dt><dd id="observedDelay">—</dd></div><div><dt>Certificate messages</dt><dd id="certificateBytes">—</dd></div><div><dt>Held-out exchanges</dt><dd id="testRows">—</dd></div></dl></div>
+            <p id="selectedProvenance" class="field-help"></p><p id="selectedWarning" class="notice compact" hidden></p>
+          </section>
         </div>
       </div>
-      <div class="deck" id="deck" tabindex="0" aria-roledescription="carousel" aria-label="Findings">
-        <div class="deck-track" id="deckTrack"></div>
-      </div>
-      <div class="dots" id="dots" role="tablist" aria-label="Choose slide"></div>
-    </div>
-  </section>
-
-  <footer class="foot" id="foot" hidden>
-    <span id="footModel"></span>
-  </footer>
-</div>
+      <section class="panel table-panel" aria-labelledby="tableTitle">
+        <div class="panel-heading"><div><p class="eyebrow">CONFIGURATION EXPLORER</p><h2 id="tableTitle">Compare eligible configurations</h2></div><div class="export-actions"><button id="exportCsv" class="button secondary small" disabled>Export CSV</button><button id="exportJson" class="button secondary small" disabled>Export JSON</button></div></div>
+        <div class="table-toolbar"><p id="tableSummary">Waiting for model predictions.</p><label for="sortResults">Sort by <select id="sortResults"><option value="predicted">Predicted delay</option><option value="name">Configuration name</option><option value="category">Security category</option></select></label></div>
+        <div class="table-scroll"><table><caption class="sr-only">Select a configuration to view its recent exchanges and prediction.</caption><thead><tr><th scope="col">Endpoint / CA algorithm</th><th scope="col">Category</th><th scope="col">Predicted delay</th><th scope="col">Budget</th><th scope="col">Extra transfer <span title="Additional certificate-message bytes divided by measured download rate; separate from ML prediction.">ⓘ</span></th></tr></thead><tbody id="resultsBody"><tr><td colspan="5" class="table-empty">Loading predictions…</td></tr></tbody></table></div>
+        <p class="table-footnote">Extra transfer compares certificate-message size with the classical reference. It assumes the measured download rate in both directions and excludes cryptographic processing, packet loss, round trips and protocol overhead.</p>
+      </section>
+      <details class="panel method-panel"><summary><span>Method &amp; model quality</span><span class="details-hint">Scope, accuracy and limitations <span aria-hidden="true">＋</span></span></summary><div class="method-content"><div><h3>What the model predicts</h3><p id="modelScope">The next authentication-exchange delay under an unchanged cryptographic configuration, using recorded simulation data.</p><p>Network request duration and download rate are measured separately. They are not inputs to this trained model. The transfer estimate is extra certificate-message bytes × 8 ÷ measured bits per second.</p><p id="baselineNote"></p></div><div><h3>Held-out model performance</h3><dl id="modelMetrics" class="quality-metrics"></dl><p id="modelLimitations"></p><p>Each configuration uses its own historical telemetry. Comparing rows does not establish the causal cost of switching from classical to post-quantum authentication.</p></div></div></details>
+      <footer class="footer"><span class="footer-brand">PQConnect</span><span>Experimental performance dashboard · Research dataset replay</span><span id="updatedAt"></span></footer>
+    </main>
+  </div>
 </body>
 </html>

@@ -1,0 +1,1 @@
+scenario,node_id,handshake_index,sta_cert_algo,ap_cert_algo,handshake_delay_ms,goodput_kbps,throughput_kbps,phy_frame_drop_rate,mac_retries,mac_retry_rate,tx_delay_us,prop_delay_ns,cert_verify_ap_us,cert_verify_sta_us,server_cert_msg_bytes,client_cert_msg_bytes

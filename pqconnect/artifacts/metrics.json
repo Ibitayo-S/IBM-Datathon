@@ -1,0 +1,234 @@
+{
+  "validation": {
+    "configuration_mean": {
+      "rows": 24786,
+      "mae_ms": 51.082451904073906,
+      "rmse_ms": 189.78215569373126,
+      "r2": 0.9767854884667383,
+      "within_100ms_percent": 87.68659727265393,
+      "p95_absolute_error_ms": 148.31501908610755,
+      "over_500ms_accuracy_percent": 98.22883886064714,
+      "over_500ms_confusion_matrix_actual_rows_predicted_columns": [
+        [
+          15376,
+          149
+        ],
+        [
+          290,
+          8971
+        ]
+      ]
+    },
+    "previous_exchange": {
+      "rows": 24786,
+      "mae_ms": 46.71704599370613,
+      "rmse_ms": 265.4985452009867,
+      "r2": 0.9545668246910011,
+      "within_100ms_percent": 95.80408295005245,
+      "p95_absolute_error_ms": 87.08574999999999,
+      "over_500ms_accuracy_percent": 97.65996933752925,
+      "over_500ms_confusion_matrix_actual_rows_predicted_columns": [
+        [
+          15233,
+          292
+        ],
+        [
+          288,
+          8973
+        ]
+      ]
+    },
+    "recent_mean5": {
+      "rows": 24786,
+      "mae_ms": 45.263531073993384,
+      "rmse_ms": 205.6678600081735,
+      "r2": 0.9727364969122607,
+      "within_100ms_percent": 93.23408375695958,
+      "p95_absolute_error_ms": 187.51325000000008,
+      "over_500ms_accuracy_percent": 96.13491487129832,
+      "over_500ms_confusion_matrix_actual_rows_predicted_columns": [
+        [
+          14848,
+          677
+        ],
+        [
+          281,
+          8980
+        ]
+      ]
+    },
+    "ridge_alpha_0.1": {
+      "rows": 24786,
+      "mae_ms": 48.18107563420243,
+      "rmse_ms": 187.80788317236824,
+      "r2": 0.9772659696991264,
+      "within_100ms_percent": 93.4963285725813,
+      "p95_absolute_error_ms": 113.26386809158478,
+      "over_500ms_accuracy_percent": 98.74929395626563,
+      "over_500ms_confusion_matrix_actual_rows_predicted_columns": [
+        [
+          15516,
+          9
+        ],
+        [
+          301,
+          8960
+        ]
+      ]
+    },
+    "ridge_alpha_10": {
+      "rows": 24786,
+      "mae_ms": 45.6701240042536,
+      "rmse_ms": 192.1750374104408,
+      "r2": 0.976196394298121,
+      "within_100ms_percent": 93.46001775195674,
+      "p95_absolute_error_ms": 130.51433341802817,
+      "over_500ms_accuracy_percent": 97.6559348019043,
+      "over_500ms_confusion_matrix_actual_rows_predicted_columns": [
+        [
+          15232,
+          293
+        ],
+        [
+          288,
+          8973
+        ]
+      ]
+    },
+    "ridge_alpha_1000": {
+      "rows": 24786,
+      "mae_ms": 60.3875267872173,
+      "rmse_ms": 213.84438146006946,
+      "r2": 0.9705256329642525,
+      "within_100ms_percent": 92.85887194383926,
+      "p95_absolute_error_ms": 145.24959091017462,
+      "over_500ms_accuracy_percent": 96.89340756878883,
+      "over_500ms_confusion_matrix_actual_rows_predicted_columns": [
+        [
+          15036,
+          489
+        ],
+        [
+          281,
+          8980
+        ]
+      ]
+    },
+    "hist_gradient_boosting": {
+      "rows": 24786,
+      "mae_ms": 41.81100700953258,
+      "rmse_ms": 187.0523450073838,
+      "r2": 0.9774485166450247,
+      "within_100ms_percent": 92.63293794884208,
+      "p95_absolute_error_ms": 120.36940051283044,
+      "over_500ms_accuracy_percent": 98.35390946502058,
+      "over_500ms_confusion_matrix_actual_rows_predicted_columns": [
+        [
+          15404,
+          121
+        ],
+        [
+          287,
+          8974
+        ]
+      ]
+    }
+  },
+  "test": {
+    "configuration_mean": {
+      "rows": 21891,
+      "mae_ms": 65.33755542353866,
+      "rmse_ms": 187.93200428481217,
+      "r2": 0.9539255889459699,
+      "within_100ms_percent": 79.50756018455073,
+      "p95_absolute_error_ms": 209.20538068181818,
+      "over_500ms_accuracy_percent": 98.44685030377781,
+      "over_500ms_confusion_matrix_actual_rows_predicted_columns": [
+        [
+          15435,
+          150
+        ],
+        [
+          190,
+          6116
+        ]
+      ]
+    },
+    "previous_exchange": {
+      "rows": 21891,
+      "mae_ms": 40.105984696907406,
+      "rmse_ms": 247.69831206278585,
+      "r2": 0.9199604946982802,
+      "within_100ms_percent": 96.63331962907131,
+      "p95_absolute_error_ms": 75.404,
+      "over_500ms_accuracy_percent": 98.20017358731899,
+      "over_500ms_confusion_matrix_actual_rows_predicted_columns": [
+        [
+          15385,
+          200
+        ],
+        [
+          194,
+          6112
+        ]
+      ]
+    },
+    "recent_mean5": {
+      "rows": 21891,
+      "mae_ms": 40.61377615458407,
+      "rmse_ms": 193.97709676812943,
+      "r2": 0.950913822719048,
+      "within_100ms_percent": 94.12087159106483,
+      "p95_absolute_error_ms": 135.87770000000003,
+      "over_500ms_accuracy_percent": 96.7246813759079,
+      "over_500ms_confusion_matrix_actual_rows_predicted_columns": [
+        [
+          15056,
+          529
+        ],
+        [
+          188,
+          6118
+        ]
+      ]
+    },
+    "hist_gradient_boosting": {
+      "rows": 21891,
+      "mae_ms": 42.35350082755104,
+      "rmse_ms": 176.63200039203892,
+      "r2": 0.9592997500440864,
+      "within_100ms_percent": 92.3347494404093,
+      "p95_absolute_error_ms": 119.47905157663644,
+      "over_500ms_accuracy_percent": 98.75291215568042,
+      "over_500ms_confusion_matrix_actual_rows_predicted_columns": [
+        [
+          15507,
+          78
+        ],
+        [
+          195,
+          6111
+        ]
+      ]
+    },
+    "ridge_alpha_10": {
+      "rows": 21891,
+      "mae_ms": 44.45366927568977,
+      "rmse_ms": 181.73374801577427,
+      "r2": 0.9569146655623484,
+      "within_100ms_percent": 93.37627335434654,
+      "p95_absolute_error_ms": 125.26291795717998,
+      "over_500ms_accuracy_percent": 98.10424375314057,
+      "over_500ms_confusion_matrix_actual_rows_predicted_columns": [
+        [
+          15363,
+          222
+        ],
+        [
+          193,
+          6113
+        ]
+      ]
+    }
+  }
+}

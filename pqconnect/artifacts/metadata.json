@@ -1,0 +1,180 @@
+{
+  "target": "handshake_delay_ms",
+  "target_description": "Simulation time from connection setup start to client final-certificate-message send; excludes final server acceptance.",
+  "selected_model": "hist_gradient_boosting",
+  "selection_rule": "Minimum validation MAE among learned models; test not used for selection.",
+  "best_ridge": "ridge_alpha_10",
+  "features": [
+    "end_entity_algorithm",
+    "ca_algorithm",
+    "server_cert_msg_bytes",
+    "client_cert_msg_bytes",
+    "handshake_delay_ms_previous",
+    "handshake_delay_ms_mean5",
+    "mac_retry_rate_previous",
+    "mac_retry_rate_mean5",
+    "phy_frame_drop_rate_previous",
+    "phy_frame_drop_rate_mean5",
+    "throughput_kbps_previous",
+    "throughput_kbps_mean5",
+    "tx_delay_us_previous",
+    "tx_delay_us_mean5"
+  ],
+  "history_window": 5,
+  "dataset_url": "https://github.com/samettonyali29/x-layer_performance_evaluation_of_PQ_X.509",
+  "dataset_content_sha256": "61e69ce753bae0ae88c4284d07a26f1d07bbcdbc6d3da9c15595d1cbc0f3b02e",
+  "csv_files": 225,
+  "raw_pq_rows": 147271,
+  "empty_files": 8,
+  "partial_nonempty_files": 107,
+  "invalid_rows_removed": 0,
+  "usable_feature_rows": 138598,
+  "split": {
+    "train": {
+      "rows": 91921,
+      "configurations": 217,
+      "index_min": 5,
+      "index_max": 59
+    },
+    "validation": {
+      "rows": 24786,
+      "configurations": 157,
+      "index_min": 60,
+      "index_max": 79
+    },
+    "test": {
+      "rows": 21891,
+      "configurations": 157,
+      "index_min": 80,
+      "index_max": 99
+    }
+  },
+  "training_configurations_without_test": [
+    "s2_SLH-DSA-SHA2-192s_signed-by_ML-DSA-44",
+    "s2_SLH-DSA-SHA2-192s_signed-by_ML-DSA-65",
+    "s2_SLH-DSA-SHA2-192s_signed-by_ML-DSA-87",
+    "s2_SLH-DSA-SHA2-192s_signed-by_SLH-DSA-SHA2-128f",
+    "s2_SLH-DSA-SHA2-192s_signed-by_SLH-DSA-SHA2-128s",
+    "s2_SLH-DSA-SHA2-192s_signed-by_SLH-DSA-SHA2-192f",
+    "s2_SLH-DSA-SHA2-192s_signed-by_SLH-DSA-SHA2-192s",
+    "s2_SLH-DSA-SHA2-192s_signed-by_SLH-DSA-SHA2-256f",
+    "s2_SLH-DSA-SHA2-192s_signed-by_SLH-DSA-SHA2-256s",
+    "s2_SLH-DSA-SHA2-192s_signed-by_SLH-DSA-SHAKE-128f",
+    "s2_SLH-DSA-SHA2-192s_signed-by_SLH-DSA-SHAKE-128s",
+    "s2_SLH-DSA-SHA2-192s_signed-by_SLH-DSA-SHAKE-192f",
+    "s2_SLH-DSA-SHA2-192s_signed-by_SLH-DSA-SHAKE-192s",
+    "s2_SLH-DSA-SHA2-192s_signed-by_SLH-DSA-SHAKE-256f",
+    "s2_SLH-DSA-SHA2-192s_signed-by_SLH-DSA-SHAKE-256s",
+    "s2_SLH-DSA-SHA2-256s_signed-by_ML-DSA-44",
+    "s2_SLH-DSA-SHA2-256s_signed-by_ML-DSA-65",
+    "s2_SLH-DSA-SHA2-256s_signed-by_ML-DSA-87",
+    "s2_SLH-DSA-SHA2-256s_signed-by_SLH-DSA-SHA2-128f",
+    "s2_SLH-DSA-SHA2-256s_signed-by_SLH-DSA-SHA2-128s",
+    "s2_SLH-DSA-SHA2-256s_signed-by_SLH-DSA-SHA2-192f",
+    "s2_SLH-DSA-SHA2-256s_signed-by_SLH-DSA-SHA2-192s",
+    "s2_SLH-DSA-SHA2-256s_signed-by_SLH-DSA-SHA2-256f",
+    "s2_SLH-DSA-SHA2-256s_signed-by_SLH-DSA-SHA2-256s",
+    "s2_SLH-DSA-SHA2-256s_signed-by_SLH-DSA-SHAKE-128f",
+    "s2_SLH-DSA-SHA2-256s_signed-by_SLH-DSA-SHAKE-128s",
+    "s2_SLH-DSA-SHA2-256s_signed-by_SLH-DSA-SHAKE-192f",
+    "s2_SLH-DSA-SHA2-256s_signed-by_SLH-DSA-SHAKE-192s",
+    "s2_SLH-DSA-SHA2-256s_signed-by_SLH-DSA-SHAKE-256f",
+    "s2_SLH-DSA-SHA2-256s_signed-by_SLH-DSA-SHAKE-256s",
+    "s2_SLH-DSA-SHAKE-192s_signed-by_ML-DSA-44",
+    "s2_SLH-DSA-SHAKE-192s_signed-by_ML-DSA-65",
+    "s2_SLH-DSA-SHAKE-192s_signed-by_ML-DSA-87",
+    "s2_SLH-DSA-SHAKE-192s_signed-by_SLH-DSA-SHA2-128f",
+    "s2_SLH-DSA-SHAKE-192s_signed-by_SLH-DSA-SHA2-128s",
+    "s2_SLH-DSA-SHAKE-192s_signed-by_SLH-DSA-SHA2-192f",
+    "s2_SLH-DSA-SHAKE-192s_signed-by_SLH-DSA-SHA2-192s",
+    "s2_SLH-DSA-SHAKE-192s_signed-by_SLH-DSA-SHA2-256f",
+    "s2_SLH-DSA-SHAKE-192s_signed-by_SLH-DSA-SHA2-256s",
+    "s2_SLH-DSA-SHAKE-192s_signed-by_SLH-DSA-SHAKE-128f",
+    "s2_SLH-DSA-SHAKE-192s_signed-by_SLH-DSA-SHAKE-128s",
+    "s2_SLH-DSA-SHAKE-192s_signed-by_SLH-DSA-SHAKE-192f",
+    "s2_SLH-DSA-SHAKE-192s_signed-by_SLH-DSA-SHAKE-192s",
+    "s2_SLH-DSA-SHAKE-192s_signed-by_SLH-DSA-SHAKE-256f",
+    "s2_SLH-DSA-SHAKE-192s_signed-by_SLH-DSA-SHAKE-256s",
+    "s2_SLH-DSA-SHAKE-256s_signed-by_ML-DSA-44",
+    "s2_SLH-DSA-SHAKE-256s_signed-by_ML-DSA-65",
+    "s2_SLH-DSA-SHAKE-256s_signed-by_ML-DSA-87",
+    "s2_SLH-DSA-SHAKE-256s_signed-by_SLH-DSA-SHA2-128f",
+    "s2_SLH-DSA-SHAKE-256s_signed-by_SLH-DSA-SHA2-128s",
+    "s2_SLH-DSA-SHAKE-256s_signed-by_SLH-DSA-SHA2-192f",
+    "s2_SLH-DSA-SHAKE-256s_signed-by_SLH-DSA-SHA2-192s",
+    "s2_SLH-DSA-SHAKE-256s_signed-by_SLH-DSA-SHA2-256f",
+    "s2_SLH-DSA-SHAKE-256s_signed-by_SLH-DSA-SHA2-256s",
+    "s2_SLH-DSA-SHAKE-256s_signed-by_SLH-DSA-SHAKE-128f",
+    "s2_SLH-DSA-SHAKE-256s_signed-by_SLH-DSA-SHAKE-128s",
+    "s2_SLH-DSA-SHAKE-256s_signed-by_SLH-DSA-SHAKE-192f",
+    "s2_SLH-DSA-SHAKE-256s_signed-by_SLH-DSA-SHAKE-192s",
+    "s2_SLH-DSA-SHAKE-256s_signed-by_SLH-DSA-SHAKE-256f",
+    "s2_SLH-DSA-SHAKE-256s_signed-by_SLH-DSA-SHAKE-256s"
+  ],
+  "numeric_training_ranges": {
+    "server_cert_msg_bytes": {
+      "min": 10680.0,
+      "max": 130420.0
+    },
+    "client_cert_msg_bytes": {
+      "min": 10677.0,
+      "max": 130417.0
+    },
+    "handshake_delay_ms_previous": {
+      "min": 5.785,
+      "max": 9471.68
+    },
+    "handshake_delay_ms_mean5": {
+      "min": 6.634,
+      "max": 6498.282
+    },
+    "mac_retry_rate_previous": {
+      "min": 0.0,
+      "max": 5.57143
+    },
+    "mac_retry_rate_mean5": {
+      "min": 0.0,
+      "max": 2.4908544
+    },
+    "phy_frame_drop_rate_previous": {
+      "min": 0.0,
+      "max": 1.0
+    },
+    "phy_frame_drop_rate_mean5": {
+      "min": 0.0,
+      "max": 1.0
+    },
+    "throughput_kbps_previous": {
+      "min": 6.17575,
+      "max": 4151.33
+    },
+    "throughput_kbps_mean5": {
+      "min": 5.628424,
+      "max": 3685.0099999999998
+    },
+    "tx_delay_us_previous": {
+      "min": 94.9231,
+      "max": 3979.66
+    },
+    "tx_delay_us_mean5": {
+      "min": 263.65919999999994,
+      "max": 3207.4139999999998
+    }
+  },
+  "versions": {
+    "python": "3.13.13",
+    "numpy": "2.4.4",
+    "pandas": "3.0.2",
+    "scikit_learn": "1.8.0",
+    "joblib": "1.5.3"
+  },
+  "limitations": [
+    "Single simulated Wi-Fi setting and x86 cryptographic timings; not LinuxONE latency measurements.",
+    "Partial files and completion-conditioned data can bias results; missing exchanges are not imputed.",
+    "Temporal holdout is by per-device handshake index, not shared wall-clock time; devices share one simulated network.",
+    "Online one-step evaluation uses actual earlier observations, including earlier validation/test exchanges.",
+    "No independent network/seed, unseen-configuration, or algorithm-switch validation.",
+    "History and requested configuration must match; cross-configuration recommendations are not validated.",
+    "Minimum security category and delay target are policy inputs, not latency-model features."
+  ]
+}

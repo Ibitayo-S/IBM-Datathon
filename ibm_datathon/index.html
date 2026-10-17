@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PQConnect - Post-Quantum Authentication Predictor</title>
+    <style>
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        color: #333;
+      }
+      .card {
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+      button {
+        background: #0f62fe;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+      }
+      button:hover {
+        background: #0353e9;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+        margin-top: 10px;
+      }
+      input,
+      select {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+      }
+      .pass {
+        color: green;
+        font-weight: bold;
+      }
+      .warning {
+        color: red;
+        font-weight: bold;
+      }
+      .result-box {
+        background: #f4f4f4;
+        padding: 15px;
+        border-radius: 5px;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>PQConnect 🔐</h1>
+    <p>Predicting post-quantum authentication performance on IBM LinuxONE.</p>
+
+    <!-- STEP 1: Network Measurement -->
+    <div class="card">
+      <h3>1. Detect Network State</h3>
+      <button id="measure-btn" onclick="measureNetwork()">
+        Run Speed & Network Test
+      </button>
+      <p id="network-summary">Status: Not tested</p>
+
+      <details style="margin-top: 15px; cursor: pointer">
+        <summary><strong>Advanced: Manual Telemetry Overrides</strong></summary>
+        <div class="grid">
+          <label
+            >Prev Auth Delay (ms): <input type="number" id="input_prev_delay"
+          /></label>
+          <label
+            >Avg Auth Delay (ms): <input type="number" id="input_avg_delay"
+          /></label>
+          <label
+            >MAC Retry Metric:
+            <input type="number" step="0.1" id="input_retries"
+          /></label>
+          <label
+            >PHY Drop Metric: <input type="number" step="0.01" id="input_drops"
+          /></label>
+          <label
+            >Throughput (Mbps):
+            <input type="number" step="0.1" id="input_throughput"
+          /></label>
+          <label
+            >PHY Tx Duration (ms):
+            <input type="number" step="0.1" id="input_tx_duration"
+          /></label>
+        </div>
+      </details>
+    </div>
+
+    <!-- STEP 2: Policy & Prediction -->
+    <div class="card">
+      <h3>2. Evaluate Cryptographic Configurations</h3>
+      <label
+        >Minimum Security Policy:
+        <select id="security_policy">
+          <option value="3">NIST Category 3+</option>
+          <option value="5">NIST Category 5</option>
+        </select>
+      </label>
+      <br /><br />
+      <button id="analyze-btn" onclick="analyzeConfigurations()" disabled>
+        Analyze PQ Configurations
+      </button>
+
+      <div id="results-area" style="display: none; margin-top: 20px">
+        <h4>Predicted Authentication Latency (Target: < 500ms)</h4>
+        <div id="predictions-list"></div>
+        <div class="result-box">
+          <strong>Recommended Configuration: </strong>
+          <span id="recommendation-text" style="color: #0f62fe"></span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      async function measureNetwork() {
+        const btn = document.getElementById("measure-btn");
+        const summary = document.getElementById("network-summary");
+        btn.innerText = "Measuring Latency & Throughput...";
+
+        // 1. Measure Latency
+        const latencies = [];
+        for (let i = 0; i < 3; i++) {
+          const start = performance.now();
+          await fetch("/api/ping");
+          latencies.push(performance.now() - start);
+        }
+        const avgLatency = latencies.reduce((a, b) => a + b) / latencies.length;
+
+        // 2. Measure Throughput
+        const dlStart = performance.now();
+        const resp = await fetch("/api/payload-512k");
+        await resp.blob();
+        const dlDurationSec = (performance.now() - dlStart) / 1000;
+        const throughputMbps = (0.512 * 8) / dlDurationSec;
+
+        summary.innerText = `Measured: ${avgLatency.toFixed(1)} ms latency | ${throughputMbps.toFixed(1)} Mbps`;
+        btn.innerText = "Requesting Telemetry Estimates...";
+
+        // 3. Request Backend Defaults
+        const estResp = await fetch("/api/estimate-telemetry", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            latency: avgLatency,
+            throughput: throughputMbps,
+          }),
+        });
+        const telemetry = await estResp.json();
+
+        // 4. Populate Manual Override Inputs
+        document.getElementById("input_prev_delay").value =
+          telemetry.prev_auth_delay;
+        document.getElementById("input_avg_delay").value =
+          telemetry.recent_avg_auth_delay;
+        document.getElementById("input_retries").value =
+          telemetry.recent_mac_retry_indicator;
+        document.getElementById("input_drops").value =
+          telemetry.recent_phy_drop_indicator;
+        document.getElementById("input_throughput").value =
+          telemetry.recent_observed_throughput;
+        document.getElementById("input_tx_duration").value =
+          telemetry.recent_phy_tx_duration;
+
+        btn.innerText = "Network State Captured ✓";
+        document.getElementById("analyze-btn").disabled = false;
+      }
+
+      async function analyzeConfigurations() {
+        // Gather telemetry from the UI inputs (capturing any manual overrides)
+        const telemetry = {
+          prev_auth_delay: parseFloat(
+            document.getElementById("input_prev_delay").value,
+          ),
+          recent_avg_auth_delay: parseFloat(
+            document.getElementById("input_avg_delay").value,
+          ),
+          recent_mac_retry_indicator: parseFloat(
+            document.getElementById("input_retries").value,
+          ),
+          recent_phy_drop_indicator: parseFloat(
+            document.getElementById("input_drops").value,
+          ),
+          recent_observed_throughput: parseFloat(
+            document.getElementById("input_throughput").value,
+          ),
+          recent_phy_tx_duration: parseFloat(
+            document.getElementById("input_tx_duration").value,
+          ),
+        };
+
+        const resp = await fetch("/api/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ telemetry: telemetry }),
+        });
+
+        const data = await resp.json();
+
+        // Render Results
+        const listDiv = document.getElementById("predictions-list");
+        listDiv.innerHTML = "";
+
+        data.predictions.forEach((item) => {
+          const statusClass = item.status === "PASS" ? "pass" : "warning";
+          listDiv.innerHTML += `
+                    <p><strong>${item.algorithm}</strong>: ${item.predicted_ms} ms 
+                    <span class="${statusClass}">[${item.status}]</span></p>
+                `;
+        });
+
+        document.getElementById("recommendation-text").innerText =
+          data.recommended;
+        document.getElementById("results-area").style.display = "block";
+      }
+    </script>
+  </body>
+</html>
